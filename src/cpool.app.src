@@ -1,0 +1,12 @@
+{application, cpool,
+ [
+  {description, ""},
+  {vsn, "1.0.0"},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib
+                 ]},
+  {mod, { cpool_app, []}},
+  {env, []}
+ ]}.
