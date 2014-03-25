@@ -1,6 +1,7 @@
 #ifndef CPOOL_H
 #define CPOOL_H 1
 
+#include "CPoolNode.hpp"
 #include "erl_nif.h"
 
 class CPool;
@@ -26,20 +27,6 @@ class CPool {
         // One iterator per scheduler
         unsigned int iterators;
         CPoolNode **iterator;
-};
-
-class CPoolNode {
-    friend class CPool;
-    public:
-        CPoolNode(const ERL_NIF_TERM &value);
-        ~CPoolNode();
-
-    protected:
-        ErlNifEnv *env;
-        ERL_NIF_TERM pid;
-
-        CPoolNode *next;
-        CPoolNode *prev;
 };
 
 #endif
