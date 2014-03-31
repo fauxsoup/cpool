@@ -82,6 +82,7 @@ bool CPool::_drop(CPoolNode* node) {
     } else if (node == tail) {
         head->prev = tail->prev;
         tail = tail->prev;
+        tail->next = head;
         _clear_iterators(node);
         delete node;
         status = true;
