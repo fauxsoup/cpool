@@ -103,7 +103,7 @@ extern "C" {
         delete handle->pool;
         handle->pool = NULL;
     }
-    
+
     static void cpool_node_resource_cleanup(ErlNifEnv* env, void* arg) {
         ((cpool_node_handle*)arg)->node = NULL;
     }
@@ -121,5 +121,18 @@ extern "C" {
         return 0;
     }
 
-    ERL_NIF_INIT(cpool, nif_funcs, &on_load, NULL, NULL, NULL);
+    static int on_upgrade(ErlNifEnv* env, void** old_priv_data, void** priv_data, ERL_NIF_TERM load_info) {
+        ErlNifResourceFlags flags = (ErlNifResourceFlags)(ERL_NIF_RT_CREATE | ERL_NIF_RT_TAKEOVER);
+        ErlNifResourceType* cpool = enif_open_resource_type(env, NULL, "cpool_resource", &cpool_resource_cleanup, flags, NULL);
+        if (cpool == NULL) return -1;
+        ErlNifResourceType* cpool_node = enif_open_resource_type(env, NULL, "cpool_node_resource", &cpool_node_resource_cleanup, flags,  NULL);
+        if (cpool_node == NULL) return -1;
+
+        cpool_RESOURCE = cpool;
+        cpool_node_RESOURCE = cpool_node;
+
+        return 0;
+    }
+
+    ERL_NIF_INIT(cpool, nif_funcs, &on_load, NULL, &on_upgrade, NULL);
 }
