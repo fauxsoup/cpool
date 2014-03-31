@@ -1,7 +1,7 @@
 {application, cpool,
  [
   {description, ""},
-  {vsn, "1.1.0"},
+  {vsn, "1.1.0a"},
   {registered, []},
   {applications, [
                   kernel,
