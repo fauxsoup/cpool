@@ -19,22 +19,20 @@ init() ->
                   Path ->
                       Path
               end,
-    erlang:load_nif(filename:join(PrivDir, ?MODULE), 0).
+    erlang:load_nif(filename:join(PrivDir, ?MODULE), 0),
+    Schedulers = erlang:system_info(schedulers),
+    lists:foreach(fun(Scheduler) ->
+                spawn_opt(fun() -> register_tid(Scheduler) end, [{scheduler, Scheduler}])
+        end, lists:seq(1, Schedulers)).
 
 new() ->
-    new(erlang:system_info(schedulers)).
-
-new(_Schedulers) ->
     ?nif_stub.
 
 deposit(Ref, Term) ->
-    deposit(Ref, Term, erlang:system_info(scheduler_id)).
-
-deposit(_Ref, _Term, _SchedulerID) ->
     ?nif_stub.
 
 withdraw(Ref) ->
-    withdraw(Ref, erlang:system_info(scheduler_id)).
+    ?nif_stub.
 
-withdraw(_Ref, _SchedulerID) ->
+register_tid(_SchedulerID) ->
     ?nif_stub.

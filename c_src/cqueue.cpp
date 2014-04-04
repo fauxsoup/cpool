@@ -1,5 +1,10 @@
 #include "erl_nif.h"
 #include "CQueue.hpp"
+#include "stdio.h"
+
+ErlNifRWLock* lookup_lock;
+unsigned int schedulers;
+ErlNifTid* scheduler_ids;
 
 extern "C" {
     static ErlNifResourceType* cqueue_RESOURCE = NULL;
@@ -12,20 +17,17 @@ extern "C" {
     static ERL_NIF_TERM cqueue_new(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
     static ERL_NIF_TERM cqueue_deposit(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
     static ERL_NIF_TERM cqueue_withdraw(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
+    static ERL_NIF_TERM cqueue_register(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
+    int get_list_id(ErlNifTid self);
 
     static ErlNifFunc nif_funcs[] = {
-        {"new", 1, cqueue_new},
-        {"deposit", 3, cqueue_deposit},
-        {"withdraw", 2, cqueue_withdraw}
+        {"new", 0, cqueue_new},
+        {"deposit", 2, cqueue_deposit},
+        {"withdraw", 1, cqueue_withdraw},
+        {"register_tid", 1, cqueue_register}
     };
 
     static ERL_NIF_TERM cqueue_new(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
-        unsigned int schedulers = 0;
-
-        if (enif_get_uint(env, argv[0], &schedulers) == 0) {
-            return enif_make_badarg(env);
-        }
-
         cqueue_handle* handle = (cqueue_handle*)enif_alloc_resource(cqueue_RESOURCE, sizeof(cqueue_handle));
         handle->queue = new CQueue(schedulers);
 
@@ -37,19 +39,15 @@ extern "C" {
 
     static ERL_NIF_TERM cqueue_deposit(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
         cqueue_handle* handle = NULL;
-        unsigned int scheduler_id = 0;
+        int list_id = get_list_id(enif_thread_self());
+
+        if (list_id == -1) return enif_make_badarg(env);
 
         if (enif_get_resource(env, argv[0], cqueue_RESOURCE, (void**)&handle) == 0) {
             return enif_make_badarg(env);
         }
 
-        if (enif_get_uint(env, argv[2], &scheduler_id) == 0) {
-            return enif_make_badarg(env);
-        }
-
-        --scheduler_id;
-
-        handle->queue->Deposit(argv[1], scheduler_id);
+        handle->queue->Deposit(argv[1], list_id);
 
         return enif_make_atom(env, "ok");
     }
@@ -57,19 +55,53 @@ extern "C" {
     static ERL_NIF_TERM cqueue_withdraw(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
         ERL_NIF_TERM result;
         cqueue_handle* handle = NULL;
-        unsigned int scheduler_id = 0;
+        int list_id = get_list_id(enif_thread_self());
+
+        if (list_id == -1) return enif_make_badarg(env);
 
         if (enif_get_resource(env, argv[0], cqueue_RESOURCE, (void**)&handle) == 0) {
             return enif_make_badarg(env);
         }
 
-        if (enif_get_uint(env, argv[1], &scheduler_id) == 0) {
-            return enif_make_badarg(env);
+        result = handle->queue->Withdraw(env, list_id);
+
+        return result;
+    }
+
+    static ERL_NIF_TERM cqueue_register(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
+        ErlNifTid thread_id = enif_thread_self();
+        unsigned int i = 0;
+
+        enif_rwlock_rwlock(lookup_lock);
+        for (i = 0; i < schedulers; ++i) {
+            if (scheduler_ids[i] == thread_id) {
+                break;
+            } else if (scheduler_ids[i] == NULL) {
+                scheduler_ids[i] = thread_id;
+                break;
+            }
         }
+        enif_rwlock_rwunlock(lookup_lock);
 
-        --scheduler_id;
+        if (i == schedulers) {
+            return enif_make_badarg(env);
+        } else {
+            return enif_make_atom(env, "ok");
+        }
+    }
 
-        result = handle->queue->Withdraw(env, scheduler_id);
+    int get_list_id(ErlNifTid self) {
+        unsigned int i = 0;
+        int result = -1;
+
+        enif_rwlock_rlock(lookup_lock);
+        for (i = 0; i < schedulers; ++i) {
+            if (scheduler_ids[i] == self) {
+                result = i;
+                break;
+            }
+        }
+        enif_rwlock_runlock(lookup_lock);
 
         return result;
     }
@@ -91,8 +123,26 @@ extern "C" {
 
         cqueue_RESOURCE = rt;
 
+        ErlNifSysInfo sys_info;
+        enif_system_info(&sys_info, sizeof(ErlNifSysInfo));
+        schedulers = sys_info.scheduler_threads;
+        scheduler_ids = new ErlNifTid[schedulers];
+
+
+        for (unsigned int i = 0; i < schedulers; ++i) {
+            scheduler_ids[i] = NULL;
+        }
+
+        lookup_lock = enif_rwlock_create("cqueue_lookup_lock");
+
         return 0;
     }
 
-    ERL_NIF_INIT(cqueue, nif_funcs, &on_load, NULL, NULL, NULL);
+    static void on_unload(ErlNifEnv* env, void* priv_data) {
+        printf("Unloading.\r\n");
+        delete scheduler_ids;
+        enif_rwlock_destroy(lookup_lock);
+    }
+
+    ERL_NIF_INIT(cqueue, nif_funcs, &on_load, NULL, NULL, &on_unload);
 }

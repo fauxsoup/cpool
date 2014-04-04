@@ -1,4 +1,5 @@
 #include "CQueue.hpp"
+#include "stdio.h"
 
 CQueue::CQueue(unsigned int schedulers) {
     unsigned int i = 0;
