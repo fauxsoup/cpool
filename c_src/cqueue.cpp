@@ -75,8 +75,10 @@ extern "C" {
         enif_rwlock_rwlock(lookup_lock);
         for (i = 0; i < schedulers; ++i) {
             if (scheduler_ids[i] == thread_id) {
+                printf("Scheduler (%p) already registered.\r\n", thread_id);
                 break;
             } else if (scheduler_ids[i] == NULL) {
+                printf("Registering scheduler (%p) with index %d\r\n", thread_id, i);
                 scheduler_ids[i] = thread_id;
                 break;
             }
