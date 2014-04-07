@@ -114,12 +114,8 @@ extern "C" {
 
     static int on_load(ErlNifEnv* env, void** priv_data, ERL_NIF_TERM load_info) {
         ErlNifResourceFlags flags = (ErlNifResourceFlags)(ERL_NIF_RT_CREATE | ERL_NIF_RT_TAKEOVER);
-        ErlNifResourceType* rt = enif_open_resource_type(env, NULL,
-                "cqueue_resource",
-                &cqueue_resource_cleanup,
-                flags, NULL);
-        if (rt == NULL)
-            return -1;
+        ErlNifResourceType* rt = enif_open_resource_type(env, NULL, "cqueue_resource", &cqueue_resource_cleanup, flags, NULL);
+        if (rt == NULL) return -1;
 
         cqueue_RESOURCE = rt;
 
@@ -138,11 +134,21 @@ extern "C" {
         return 0;
     }
 
+    static int on_upgrade(ErlNifEnv* env, void** priv_data, void** old_data, ERL_NIF_TERM load_info) {
+        ErlNifResourceFlags flags = (ErlNifResourceFlags)(ERL_NIF_RT_CREATE | ERL_NIF_RT_TAKEOVER);
+        ErlNifResourceType* rt = enif_open_resource_type(env, NULL, "cqueue_resource", &cqueue_resource_cleanup, flags, NULL);
+        if (rt == NULL) return -1;
+
+        cqueue_RESOURCE = rt;
+
+        return 0;
+    }
+
     static void on_unload(ErlNifEnv* env, void* priv_data) {
         printf("Unloading.\r\n");
         delete scheduler_ids;
         enif_rwlock_destroy(lookup_lock);
     }
 
-    ERL_NIF_INIT(cqueue, nif_funcs, &on_load, NULL, NULL, &on_unload);
+    ERL_NIF_INIT(cqueue, nif_funcs, &on_load, NULL, &on_upgrade, &on_unload);
 }

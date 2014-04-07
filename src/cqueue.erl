@@ -28,10 +28,10 @@ init() ->
 new() ->
     ?nif_stub.
 
-deposit(Ref, Term) ->
+deposit(_Ref, _Term) ->
     ?nif_stub.
 
-withdraw(Ref) ->
+withdraw(_Ref) ->
     ?nif_stub.
 
 register_tid(_SchedulerID) ->
