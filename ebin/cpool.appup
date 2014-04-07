@@ -1,10 +1,12 @@
-{"1.1.0a", [
-        {"1.1.0", [
-                {load_module, cpool}
+{"1.1.0b", [
+        {"1.1.0a", [
+                {delete_module, cqueue},
+                {load_module, cqueue}
             ]}
     ],
     [
-        {"1.1.0", [
-                {load_module, cpool}
+        {"1.1.0a", [
+                {delete_module, cqueue},
+                {load_module, cqueue}
             ]}
     ]}.
