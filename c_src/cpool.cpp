@@ -122,6 +122,7 @@ extern "C" {
     }
 
     static int on_upgrade(ErlNifEnv* env, void** old_priv_data, void** priv_data, ERL_NIF_TERM load_info) {
+        printf("Executing on_upgrade callback.\r\n");
         ErlNifResourceFlags flags = (ErlNifResourceFlags)(ERL_NIF_RT_CREATE | ERL_NIF_RT_TAKEOVER);
         ErlNifResourceType* cpool = enif_open_resource_type(env, NULL, "cpool_resource", &cpool_resource_cleanup, flags, NULL);
         if (cpool == NULL) return -1;
