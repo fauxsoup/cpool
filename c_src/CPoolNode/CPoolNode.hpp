@@ -5,15 +5,12 @@
 
 class CPoolNode {
     public:
-        CPoolNode(const ERL_NIF_TERM &value);
+        CPoolNode(const ErlNifPid &value);
         ~CPoolNode();
 
-        ERL_NIF_TERM pid;
+        ErlNifPid pid;
         CPoolNode *next;
         CPoolNode *prev;
-
-    protected:
-        ErlNifEnv *env;
 };
 
 #endif

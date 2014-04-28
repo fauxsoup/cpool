@@ -40,6 +40,7 @@ extern "C" {
     static ERL_NIF_TERM cqueue_deposit(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
         cqueue_handle* handle = NULL;
         int list_id = get_list_id(enif_thread_self());
+        ErlNifPid pid;
 
         if (list_id == -1) return enif_make_badarg(env);
 
@@ -47,7 +48,11 @@ extern "C" {
             return enif_make_badarg(env);
         }
 
-        handle->queue->Deposit(argv[1], list_id);
+        if (enif_get_local_pid(env, argv[1], &pid) == 0) {
+            return enif_make_badarg(env);
+        }
+
+        handle->queue->Deposit(pid, list_id);
 
         return enif_make_atom(env, "ok");
     }

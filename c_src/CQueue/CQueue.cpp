@@ -29,8 +29,8 @@ CQueue::~CQueue() {
     delete tails;
 }
 
-void CQueue::Deposit(const ERL_NIF_TERM &value, unsigned int list_id) {
-    CPoolNode *node = new CPoolNode(value);
+void CQueue::Deposit(const ErlNifPid &pid, unsigned int list_id) {
+    CPoolNode *node = new CPoolNode(pid);
     if (heads[list_id] == NULL) {
         heads[list_id] = node;
         tails[list_id] = node;
@@ -48,13 +48,13 @@ ERL_NIF_TERM CQueue::Withdraw(ErlNifEnv *env, unsigned int list_id) {
     if (node == NULL) {
         result = enif_make_atom(env, "empty");
     } else if (node == tails[list_id]) {
-        result = enif_make_copy(env, heads[list_id]->pid);
+        result = enif_make_pid(env, &(heads[list_id]->pid));
         heads[list_id] = NULL;
         tails[list_id] = NULL;
         delete node;
         okay = true;
     } else {
-        result = enif_make_copy(env, heads[list_id]->pid);
+        result = enif_make_pid(env, &(heads[list_id]->pid));
         heads[list_id] = node->next;
         delete node;
         okay = true;

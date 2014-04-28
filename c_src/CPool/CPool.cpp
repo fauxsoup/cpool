@@ -27,7 +27,7 @@ CPool::~CPool() {
     delete iterator;
 }
 
-CPoolNode* CPool::Join(const ERL_NIF_TERM &pid) {
+CPoolNode* CPool::Join(const ErlNifPid &pid) {
     CPoolNode* node = new CPoolNode(pid);
     enif_rwlock_rwlock(iterator_lock);
     if (head != NULL) {
@@ -115,10 +115,10 @@ ERL_NIF_TERM CPool::Next(ErlNifEnv* env, const unsigned int &iterator_id) {
     }
     enif_rwlock_rlock(iterator_lock);
     if (iterator[iterator_id] != NULL) {
-        result = enif_make_copy(env, iterator[iterator_id]->pid);
+        result = enif_make_pid(env, &(iterator[iterator_id]->pid));
         iterator[iterator_id] = iterator[iterator_id]->next;
     } else if (head != NULL) {
-        result = enif_make_copy(env, head->pid);
+        result = enif_make_pid(env, &(head->pid));
         iterator[iterator_id] = head->next;
     } else {
         result = enif_make_atom(env, "empty");

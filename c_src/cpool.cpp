@@ -46,14 +46,19 @@ extern "C" {
     static ERL_NIF_TERM cpool_join(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
         cpool_handle* handle = NULL;
         cpool_node_handle* node;
+        ErlNifPid pid;
         ERL_NIF_TERM result;
 
         if (enif_get_resource(env, argv[0], cpool_RESOURCE, (void**)&handle) == 0) {
             return enif_make_badarg(env);
         }
 
+        if (enif_get_local_pid(env, argv[1], &pid) == 0) {
+            return enif_make_badarg(env);
+        }
+
         node = (cpool_node_handle*)enif_alloc_resource(cpool_node_RESOURCE, sizeof(cpool_node_handle));
-        node->node = handle->pool->Join(argv[1]);
+        node->node = handle->pool->Join(pid);
         result  = enif_make_resource(env, (void*)node);
         enif_release_resource((void*)node);
 

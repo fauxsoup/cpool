@@ -12,7 +12,7 @@ class CPool {
         CPool(unsigned int schedulers);
         ~CPool();
 
-        CPoolNode* Join(const ERL_NIF_TERM &pid);
+        CPoolNode* Join(const ErlNifPid &pid);
         ERL_NIF_TERM Depart(ErlNifEnv* env, CPoolNode* node);
         ERL_NIF_TERM Next(ErlNifEnv* env, const unsigned int &iterator_id);
 
