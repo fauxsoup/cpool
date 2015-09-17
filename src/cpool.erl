@@ -1,5 +1,5 @@
 -module(cpool).
--export([new/0, join/1, depart/2, next/1, send/2]).
+-export([new/1, join/1, depart/1, next/1, send/2]).
 -on_load(init/0).
 
 -define(nif_stub, nif_stub_error(?LINE)).
@@ -17,9 +17,6 @@ init() ->
               end,
     erlang:load_nif(filename:join(PrivDir, ?MODULE), 0).
 
-new() ->
-    new(erlang:system_info(schedulers)).
-
 new(_) ->
     ?nif_stub.
 
@@ -29,13 +26,10 @@ join(CPool) ->
 join(_, _) ->
     ?nif_stub.
 
-depart(_, _) ->
+depart(_) ->
     ?nif_stub.
 
-next(CPool) ->
-    next(CPool, erlang:system_info(scheduler_id)).
-
-next(_, _) ->
+next(_) ->
     ?nif_stub.
 
 send(Pool, Msg) ->

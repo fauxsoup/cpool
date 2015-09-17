@@ -1,32 +1,27 @@
 #ifndef CPOOL_H
 #define CPOOL_H 1
 
-#include "CPoolNode.hpp"
 #include "erl_nif.h"
+#include <vector>
 
 class CPool;
 class CPoolNode;
 
 class CPool {
+    private:
+        typedef std::vector<ErlNifPid> PidList;
+
     public:
-        CPool(unsigned int schedulers);
+        CPool();
         ~CPool();
 
-        CPoolNode* Join(const ErlNifPid &pid);
-        ERL_NIF_TERM Depart(ErlNifEnv* env, CPoolNode* node);
-        ERL_NIF_TERM Next(ErlNifEnv* env, const unsigned int &iterator_id);
+        ERL_NIF_TERM Join(ErlNifEnv* env, const ErlNifPid &pid);
+        ERL_NIF_TERM Depart(ErlNifEnv* env, const ErlNifPid &pid);
+        ERL_NIF_TERM Next(ErlNifEnv* env);
 
     private:
-        void _clear_iterators(CPoolNode* node);
-        bool _drop(CPoolNode* node);
-
         ErlNifRWLock *iterator_lock;
-        CPoolNode *head;
-        CPoolNode *tail;
-
-        // One iterator per scheduler
-        unsigned int iterators;
-        CPoolNode **iterator;
+        PidList pids;
 };
 
 #endif

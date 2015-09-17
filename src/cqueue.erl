@@ -1,7 +1,8 @@
 -module(cqueue).
 -export([
         new/0,
-        deposit/2,
+        new/1,
+        deposit/1,
         withdraw/1
     ]).
 -on_load(init/0).
@@ -19,16 +20,15 @@ init() ->
                   Path ->
                       Path
               end,
-    erlang:load_nif(filename:join(PrivDir, ?MODULE), 0),
-    Schedulers = erlang:system_info(schedulers),
-    lists:foreach(fun(Scheduler) ->
-                spawn_opt(fun() -> register_tid(Scheduler) end, [{scheduler, Scheduler}])
-        end, lists:seq(1, Schedulers)).
+    io:format("~p\t~p~n", [PrivDir, erlang:load_nif(filename:join(PrivDir, ?MODULE), 0)]).
 
 new() ->
     ?nif_stub.
 
-deposit(_Ref, _Term) ->
+new(_Name) ->
+    ?nif_stub.
+
+deposit(_Ref) ->
     ?nif_stub.
 
 withdraw(_Ref) ->
